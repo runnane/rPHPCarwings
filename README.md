@@ -1,6 +1,12 @@
 # rPHPCarwings #
 
-Quickly hacked script to access carwings api. Tested on EU account. 
+PHP class for communicating with Nissan Carwings XML-RPC service
+Quickly hacked, with minimal error checking - so dont abuse. Tested on an norwegian leaf car account. 
+
+### Known bugs/limitations ###
+
+* Unsure on how it will handle server problems, multiple cars on one account, NON-EU accounts
+* Minimal errorchecking
 
 ### Example code ###
 
@@ -25,7 +31,7 @@ print_r($vars);
 ```
 
 This should result in something like this:
-
+```
 Array
 (
     [OperationResult] => OK
@@ -39,8 +45,7 @@ Array
     [ChargeMode] => not_charging
     [lastBatteryStatusCheckExecutionTime] => 2014-06-19T10:54:28.000Z
 )
-
-
+```
 
 ### Sources/Links ###
 

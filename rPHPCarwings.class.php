@@ -1,7 +1,7 @@
 <?php
 /*
 
-rPHPCarwings.class.php - PHP classes for communicating with Nissan Carwings XML-RPC service
+rPHPCarwings.class.php - PHP class for communicating with Nissan Carwings XML-RPC service
 Copyright (C) 2014 Jon Tungland // runnane.no
 
 This file is part of rPHPCarwings.
@@ -20,7 +20,6 @@ You should have received a copy of the GNU General Public License
 along with rPHPCarwings.  If not, see <http://www.gnu.org/licenses/>.
  
 */
-
 
 if (version_compare(phpversion(), '5.0.0', '<')) {
     die("Please upgrade, you need PHP version 5+");
@@ -106,10 +105,6 @@ class rPHPCarwings{
 			throw new Exception("Could not parse XML from RPC server.");	
 		}
 		
-		//$this->Vin = $xmlResponse->SmartphoneUserInfoType->VehicleInfo->Vin;
-		//$this->Nickname = $xmlResponse->SmartphoneUserInfoType->Nickname;
-		
-		
 		$vars =  $this->Parse_SmartphoneLatestBatteryStatusResponse($xmlResponse->SmartphoneLatestBatteryStatusResponse);
 
 		$vars['Vin'] = (string)$xmlResponse->SmartphoneUserInfoType->VehicleInfo->Vin;
@@ -118,7 +113,6 @@ class rPHPCarwings{
 		$vars['Nickname'] = (string)$xmlResponse->SmartphoneUserInfoType->Nickname;
 		$this->Nickname = $vars['Nickname'];
 
-		//print_r($vars);
 		return $vars;
 		
 	}
