@@ -39,15 +39,19 @@ This should result in something like this:
 Array
 (
     [OperationResult] => OK
-    [OperationDateAndTime] => 2014-06-19T10:54:30.0
-    [BatteryChargingStatus] => false
+    [OperationDateAndTime] => 2014-06-19T12:53:15.0
     [BatteryCapacity] => 12
     [BatteryRemainingAmount] => 12
     [PluginState] => CONNECTED
+    [ChargeMode] => 220V
+    [BatteryChargingStatus] => true
     [CruisingRangeAcOn] => 144144
     [CruisingRangeAcOff] => 150696
-    [ChargeMode] => not_charging
-    [lastBatteryStatusCheckExecutionTime] => 2014-06-19T10:54:28.000Z
+    [lastBatteryStatusCheckExecutionTime] => 2014-06-19T12:53:05.000CEST
+    [SecondsSinceUpdate] => 150
+    [Vin] => **REMOVED**
+    [Nickname] => MyLeaf
+
 )
 ```
 
