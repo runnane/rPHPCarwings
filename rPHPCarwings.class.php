@@ -25,9 +25,11 @@ if (version_compare(phpversion(), '5.0.0', '<')) {
     die("Please upgrade, you need PHP version 5+");
 }
 if(!function_exists("simplexml_load_string")){
-	die("SimpleXML module not found");	
+	die("simplexml_load_string() function not found, check for missing SimpleXML module");	
 }
-
+if(!function_exists("curl_init")){
+	die("curl_init() function not found, check for missing CURL module");	
+}
 
 class rPHPCarwings{
 	
@@ -38,6 +40,8 @@ class rPHPCarwings{
 	private $AppVersion		= "1.8";
 	private $SmartphoneType	= "IPHONE";
 	
+	private $TimeZone		= "CEST";
+	
 	private $userService 	= "https://mobileapps.prod.nissan.eu/android-carwings-backend-v2/2.0/carwingsServlet";
 	private $userAgent 		= "Dalvik/1.6.0 (Linux; U; Android 4.4.2; HTC One_M8 Build/KOT49H)";
 	
@@ -46,11 +50,12 @@ class rPHPCarwings{
 	private $Vin;
 	private $Nickname;
 	
-	
+	public $RequestLog;
 	
 	public function __construct($username,$password){
 		$this->Username = $username;
 		$this->Password = $password;
+		$this->RequestLog = array();
 	}
 	
 	public function Login(){
@@ -81,8 +86,16 @@ class rPHPCarwings{
 		$headers[] = "Accept-Encoding: gzip, deflate";
 		$headers[] = "Connection: keep-alive";
 		$headers[] = "Expect:";
-		
 		$response = $this->DoRPCCall($this->userService, $headers, $xml);
+		
+		$xmlResponse = simplexml_load_string($response['content']);
+		if($xmlResponse === FALSE){
+			throw new Exception("Could not parse XML from RPC server.");	
+		}
+		
+		if(isset($xmlResponse->SmartphoneErrorType)){
+			throw new Exception("Server returned error: code=" . (int)$xmlResponse->SmartphoneErrorType->ErrorCode);	
+		}
 		
 		preg_match_all('/^Set-Cookie: (.*?)=(.*?)$/sm', $response['header'], $m);
 		if(!is_array($m) || !is_array($m[0])){
@@ -100,11 +113,6 @@ class rPHPCarwings{
 			throw new Exception("Could not log in, JSESSION not returned by RPC Server");	
 		}
 
-		$xmlResponse = simplexml_load_string($response['content']);
-		if($xmlResponse === FALSE){
-			throw new Exception("Could not parse XML from RPC server.");	
-		}
-		
 		$vars =  $this->Parse_SmartphoneLatestBatteryStatusResponse($xmlResponse->SmartphoneLatestBatteryStatusResponse);
 
 		$vars['Vin'] = (string)$xmlResponse->SmartphoneUserInfoType->VehicleInfo->Vin;
@@ -112,7 +120,7 @@ class rPHPCarwings{
 
 		$vars['Nickname'] = (string)$xmlResponse->SmartphoneUserInfoType->Nickname;
 		$this->Nickname = $vars['Nickname'];
-
+		
 		return $vars;
 		
 	}
@@ -120,18 +128,27 @@ class rPHPCarwings{
 	private function Parse_SmartphoneLatestBatteryStatusResponse($xml){
 		$vars = array();
 		$vars['OperationResult'] = (string)$xml->SmartphoneBatteryStatusResponseType->BatteryStatusRecords->OperationResult;
+		if($vars['OperationResult'] == "null"){
+			$vars['OperationResult'] = "OK";	
+		}
 		$vars['OperationDateAndTime'] = (string)$xml->SmartphoneBatteryStatusResponseType->BatteryStatusRecords->OperationDateAndTime;
 		
-		$vars['BatteryChargingStatus'] = (string)$xml->SmartphoneBatteryStatusResponseType->BatteryStatusRecords->BatteryStatus->BatteryChargingStatus;
 		$vars['BatteryCapacity'] = (int)$xml->SmartphoneBatteryStatusResponseType->BatteryStatusRecords->BatteryStatus->BatteryCapacity;
 		$vars['BatteryRemainingAmount'] = (int)$xml->SmartphoneBatteryStatusResponseType->BatteryStatusRecords->BatteryStatus->BatteryRemainingAmount;
 		
 		$vars['PluginState'] = (string)$xml->SmartphoneBatteryStatusResponseType->BatteryStatusRecords->PluginState;
+		$vars['ChargeMode'] = (string)$xml->SmartphoneBatteryStatusResponseType->BatteryStatusRecords->ChargeMode;
+		$vars['BatteryChargingStatus'] = (string)$xml->SmartphoneBatteryStatusResponseType->BatteryStatusRecords->BatteryStatus->BatteryChargingStatus;
+		
 		$vars['CruisingRangeAcOn'] = (int)$xml->SmartphoneBatteryStatusResponseType->BatteryStatusRecords->CruisingRangeAcOn;
 		$vars['CruisingRangeAcOff'] = (int)$xml->SmartphoneBatteryStatusResponseType->BatteryStatusRecords->CruisingRangeAcOff;
-		$vars['ChargeMode'] = (string)$xml->SmartphoneBatteryStatusResponseType->BatteryStatusRecords->ChargeMode;
+		
 		
 		$vars['lastBatteryStatusCheckExecutionTime'] = (string)$xml->SmartphoneBatteryStatusResponseType->lastBatteryStatusCheckExecutionTime;
+		
+		// Somhow they store it as Z, but it local time..
+		$vars['lastBatteryStatusCheckExecutionTime'] = str_replace("Z", $this->TimeZone, $vars['lastBatteryStatusCheckExecutionTime']);
+		$vars['SecondsSinceUpdate'] = time() - strtotime($vars['lastBatteryStatusCheckExecutionTime']);
 		return $vars;
 	}
 	
@@ -142,6 +159,7 @@ class rPHPCarwings{
 		if(!$this->Vin){
 			throw new Exception("Cannot request, vehicle identification number not found");	
 		}
+		
 		$headers = array();
 		$headers[] = "Cookie: JSESSIONID=".$this->sessionId;
 		$headers[] = "Content-Type: text/xml";
@@ -169,7 +187,6 @@ class rPHPCarwings{
 		}
 		
 		return $xmlResponse;
-
 	}
 	
 	public function GetVechicleInfo(){
@@ -179,6 +196,7 @@ class rPHPCarwings{
 		if(!$this->Vin){
 			throw new Exception("Cannot request, vehicle identification number not found");	
 		}
+		
 		$headers = array();
 		$headers[] = "Cookie: JSESSIONID=".$this->sessionId;
 		$headers[] = "Content-Type: text/xml";
@@ -213,21 +231,32 @@ class rPHPCarwings{
 	}
 
 
-	private function DoRPCCall($url, $post_headers, $post_fields){
+	private function DoRPCCall($url, $post_headers, $post_data){
+		$raw_headers = "";
+		foreach($post_headers as $post_header_value){
+			$raw_headers  .= $post_header_value . "\n";
+		}
+		$this->RequestLog[] = array("time" => date("Y-m-d H:i:s"), "direction" => "out", "header" => trim($raw_headers), "content" => $post_data);		
+
 		$ch = curl_init( $url );
+		
         curl_setopt($ch, CURLOPT_HEADER, 1);
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_fields);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
 		curl_setopt($ch, CURLOPT_USERAGENT, $this->userAgent);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $post_headers); 
 		curl_setopt($ch, CURLOPT_VERBOSE, 0); 
+		
 	    $response = curl_exec($ch);   
         curl_close($ch);
+		
 		list($header, $content) = explode("\r\n\r\n", $response, 2);
 		if(strpos($header, "HTTP/1.1 200 OK") !== 0 ){
 			throw new Exception("Unexpected response from RPC server");	
 		}
+		$this->RequestLog[] = array("time" => date("Y-m-d H:i:s"), "direction" => "out", "header" => $header, "content" => $content);		
+
 		return array('header' => $header, 'content' => $content);
 	}
 	
