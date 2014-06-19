@@ -18,13 +18,6 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with rPHPCarwings.  If not, see <http://www.gnu.org/licenses/>.
-
--------------
-
-sources: 
- - http://electricvehiclewiki.com/Carwings_protocol
- - http://www.telerik.com/fiddler
- - http://docs.telerik.com/fiddler/configure-fiddler/tasks/configureforandroid
  
 */
 
