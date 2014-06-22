@@ -4,7 +4,7 @@
 I am not responsible for any problems, crashes, failures or pain this piece of software will cause. Use it on your own risk.
 
 ### About ###
-PHP class for communicating with Nissan Carwings XML-RPC service
+PHP class for communicating with Nissan Carwings XML-RPC service.
 Quickly hacked, with minimal error checking - so keep that in mind. Tested on an norwegian leaf car account. 
 
 ### Known bugs/limitations ###
