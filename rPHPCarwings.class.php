@@ -38,11 +38,11 @@ class rPHPCarwings{
 	
 	private $Locale			= "US";
 	private $AppVersion		= "1.8";
-	private $SmartphoneType	= "IPHONE";
+	private $SmartphoneType		= "IPHONE";
 	
 	private $TimeZone		= "CEST";
 	
-	private $userService 	= "https://mobileapps.prod.nissan.eu/android-carwings-backend-v2/2.0/carwingsServlet";
+	private $userService 		= "https://mobileapps.prod.nissan.eu/android-carwings-backend-v2/2.0/carwingsServlet";
 	private $userAgent 		= "Dalvik/1.6.0 (Linux; U; Android 4.4.2; HTC One_M8 Build/KOT49H)";
 	
 	private $sessionId;
@@ -240,16 +240,16 @@ class rPHPCarwings{
 
 		$ch = curl_init( $url );
 		
-        curl_setopt($ch, CURLOPT_HEADER, 1);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+		curl_setopt($ch, CURLOPT_HEADER, 1);
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
 		curl_setopt($ch, CURLOPT_USERAGENT, $this->userAgent);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, $post_headers); 
 		curl_setopt($ch, CURLOPT_VERBOSE, 0); 
 		
-	    $response = curl_exec($ch);   
-        curl_close($ch);
+		$response = curl_exec($ch);   
+		curl_close($ch);
 		
 		list($header, $content) = explode("\r\n\r\n", $response, 2);
 		if(strpos($header, "HTTP/1.1 200 OK") !== 0 ){
